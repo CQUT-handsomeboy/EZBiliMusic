@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -84,6 +85,63 @@ func TestDownloadAudio(t *testing.T) {
 	}
 
 	fmt.Println("Download audio successfully")
+
+}
+
+func TestGetMetaAndDownloadAudio(t *testing.T) {
+	url := urls[1]
+	meta, err := GetVideoHTMLMeta(url)
+
+	if err != nil {
+		fmt.Println("Failed to get video meta")
+		return
+	}
+
+	aid := meta.Aid
+	bvid := meta.BVid
+	cid := meta.VideoData.Pages[0].Cid
+
+	err = DownloadAudio(aid, cid, bvid)
+
+	if err != nil {
+		fmt.Println("Failed to download audio")
+		return
+	}
+
+	fmt.Println("Successfully downloaded audio,check output folder")
+}
+
+func TestGetVideoMeta(t *testing.T) {
+	url := urls[2]
+	bodyStr, err := GetHTMLContent(url)
+
+	if err != nil {
+		fmt.Println("Failed to get HTML content")
+		return
+	}
+
+	htmlmeta, err := ParseHTMLMeta(bodyStr)
+
+	if err != nil {
+		fmt.Println("Failed to parse HTML meta")
+		return
+	}
+
+	jsonData, err := json.MarshalIndent(htmlmeta, "", "  ")
+
+	if err != nil {
+		fmt.Println("Failed to marshal JSON")
+		return
+	}
+
+	err = os.WriteFile("test_output.json", jsonData, 0644)
+
+	if err != nil {
+		fmt.Println("Failed to write JSON to file")
+		return
+	}
+
+	fmt.Println("JSON metadata written to file")
 
 }
 

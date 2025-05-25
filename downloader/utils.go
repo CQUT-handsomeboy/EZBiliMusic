@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 )
@@ -23,7 +24,10 @@ var fakeHeader map[string]string = map[string]string{
 	"Accept-Language": "en-US,en;q=0.8",
 }
 
-var defaultRefer = "https://www.bilibili.com/"
+const defaultRefer = "https://www.bilibili.com/"
+
+var OutputFilesRootPath string
+var TempFilesRootPath string
 
 func GetHTMLContent(url string) (string, error) {
 
@@ -203,8 +207,8 @@ func MatchOneOf(text string, patterns ...string) []string {
 }
 
 func DownloadPerChunkM4a(url string, outputPathStem string) (err error) {
-	tempFilePath := outputPathStem + ".download"
-	filePath := outputPathStem + ".m4a"
+	tempFilePath := filepath.Join(TempFilesRootPath, outputPathStem+".download")
+	outputFilePath := filepath.Join(OutputFilesRootPath, outputPathStem+".m4a")
 
 	var tempFile *os.File
 
@@ -229,7 +233,7 @@ func DownloadPerChunkM4a(url string, outputPathStem string) (err error) {
 	defer func() {
 		tempFile.Close()
 		if err == nil {
-			os.Rename(tempFilePath, filePath)
+			os.Rename(tempFilePath, outputFilePath)
 		}
 	}()
 

@@ -1,3 +1,3 @@
-module github.com/CQUT-handsomeboy/BMusic
+module github.com/CQUT-handsomeboy/EZBiliMusic
 
 go 1.24.3
