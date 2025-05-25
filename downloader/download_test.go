@@ -3,6 +3,7 @@ package downloader
 import (
 	"encoding/json"
 	"fmt"
+	"go.senan.xyz/taglib"
 	"os"
 	"testing"
 )
@@ -177,5 +178,21 @@ func TestDownloadPerChunk(t *testing.T) {
 		fmt.Println(err)
 	} else {
 		fmt.Println("success")
+	}
+}
+
+func TestEditMusicMeta(t *testing.T) {
+	err := taglib.WriteTags("../output/BV1YmFPe4EnY_28086437741.m4a", map[string][]string{
+		taglib.Title:       {"示例标题"},
+		taglib.Artist:      {"示例艺术家"},
+		taglib.Album:       {"示例专辑"},
+		taglib.TrackNumber: {"1"},
+		taglib.Genre:       {"流行"},
+	}, 0)
+	
+	if err != nil {
+		fmt.Println("写入标签时出错:", err)
+	} else {
+		fmt.Println("标签写入成功")
 	}
 }
