@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.senan.xyz/taglib"
 	"os"
+	"os/exec"
 	"testing"
 )
 
@@ -183,5 +184,33 @@ func TestEditMusicMeta(t *testing.T) {
 		fmt.Println("写入标签时出错:", err)
 	} else {
 		fmt.Println("标签写入成功")
+	}
+}
+
+func TestUseGateToStorage(t *testing.T) {
+	cmd := exec.Command("skate", "remove", "hello")
+	cmd.Run()
+
+	cmd = exec.Command("skate", "get", "hello")
+	out, err := cmd.CombinedOutput()
+
+	if err != nil {
+		// supposed
+		fmt.Println("no such key")
+	} else {
+		fmt.Printf("hello:%s\n", string(out))
+	}
+
+	cmd = exec.Command("skate", "set", "hello", "world")
+	cmd.Run()
+
+	cmd = exec.Command("skate", "get", "hello")
+	out, err = cmd.CombinedOutput()
+
+	if err != nil {
+		fmt.Println("no such key")
+	} else {
+		// supposed
+		fmt.Printf("hello:%s\n", string(out))
 	}
 }

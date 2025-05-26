@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/CQUT-handsomeboy/EZBiliMusic/downloader"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -26,14 +27,29 @@ func downloadSongWorker(ch chan SongDownloadRequest) {
 		path := filepath.Join(downloader.OutputFilesRootPath,
 			fmt.Sprintf("%s_%d.m4a", data.BVid, data.Cid))
 		if _, err := os.Stat(path); err == nil {
+			// exists!
 			fmt.Println("file already exists, skip download")
 			continue
 		}
+		cmdArg := fmt.Sprintf("%s:%s", data.Artist, data.Title)
+		cmd := exec.Command("skate", "get", cmdArg)
+		if err := cmd.Run(); err == nil {
+			// exists!
+			fmt.Println("music already exists, skip download")
+			continue
+		}
+
 		fmt.Println("download start...")
 		if err := downloader.DownloadAudio(data.Aid, data.Cid, data.BVid, data.Title, data.Artist); err != nil {
 			fmt.Println("download failed...")
 			continue
 		}
+		cmd = exec.Command("skate", "set", cmdArg)
+
+		if err := cmd.Run(); err != nil {
+			fmt.Println("skate command failed...")
+		}
+
 		fmt.Println("download done...")
 	}
 }
@@ -43,7 +59,7 @@ type SongMetadataRequest struct {
 }
 
 func main() {
-	ch := make(chan SongDownloadRequest, 100) // 缓存100个下载请求
+	ch := make(chan SongDownloadRequest,100) // 缓存100个下载请求
 
 	exePath, _ := os.Executable()
 	downloader.OutputFilesRootPath = filepath.Join(filepath.Dir(exePath), "output")
@@ -64,6 +80,15 @@ func main() {
 	go downloadSongWorker(ch)
 
 	http.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			io.WriteString(w, "Method Not Allowed")
@@ -91,10 +116,18 @@ func main() {
 			fmt.Println("server is busy, please try later")
 			return
 		}
-
 	})
 
 	http.HandleFunc("/metadata", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			io.WriteString(w, "Method Not Allowed")
@@ -136,7 +169,6 @@ func main() {
 			io.WriteString(w, "encode JSON error")
 			return
 		}
-
 	})
 
 	fmt.Println("Hello,server is running...")
