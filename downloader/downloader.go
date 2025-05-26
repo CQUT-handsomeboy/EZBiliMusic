@@ -15,7 +15,7 @@ func GetVideoHTMLMeta(url string) (*HTMLMeta, error) {
 	return ParseHTMLMeta(bodyStr)
 }
 
-func DownloadAudio(aid int, cid int, bvid string) error {
+func DownloadAudio(aid int, cid int, bvid string, title string, artist string) error {
 	outputPathStem := fmt.Sprintf("%s_%d", bvid, cid)
 
 	api := "https://api.bilibili.com/x/player/playurl?"
@@ -49,7 +49,7 @@ func DownloadAudio(aid int, cid int, bvid string) error {
 		}
 	}
 
-	err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem)
+	err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem, title, artist)
 
 	if err != nil {
 		return fmt.Errorf("failed to download audio")

@@ -78,7 +78,7 @@ func TestDownloadAudio(t *testing.T) {
 		}
 	}
 
-	err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem)
+	err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem, "标题", "艺术家")
 
 	if err != nil {
 		fmt.Println("Failed to download audio")
@@ -102,7 +102,7 @@ func TestGetMetaAndDownloadAudio(t *testing.T) {
 	bvid := meta.BVid
 	cid := meta.VideoData.Pages[0].Cid
 
-	err = DownloadAudio(aid, cid, bvid)
+	err = DownloadAudio(aid, cid, bvid, "标题", "艺术家")
 
 	if err != nil {
 		fmt.Println("Failed to download audio")
@@ -171,25 +171,14 @@ func TestGetSizeOfResources(t *testing.T) {
 	}
 }
 
-func TestDownloadPerChunk(t *testing.T) {
-	err := DownloadPerChunkM4a("https://qiang.xiaoyin.link/d/xiaoyin/Download/geek.zip?sign=B9t-JcEmFW4L0EhE3k9a2bzP8j2iUl2rcoQMDJgSoLU=:0", "geek") // this file is a zip file just for test,so change the affix
-
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("success")
-	}
-}
-
 func TestEditMusicMeta(t *testing.T) {
-	err := taglib.WriteTags("../output/BV1YmFPe4EnY_28086437741.m4a", map[string][]string{
-		taglib.Title:       {"示例标题"},
-		taglib.Artist:      {"示例艺术家"},
-		taglib.Album:       {"示例专辑"},
-		taglib.TrackNumber: {"1"},
-		taglib.Genre:       {"流行"},
-	}, 0)
-	
+	filePath := "../output/BV1YmFPe4EnY_28086437741.m4a"
+
+	err := taglib.WriteTags(filePath, map[string][]string{
+		taglib.Title:  {"孤独患者"},
+		taglib.Artist: {"陈奕迅"},
+	}, 1)
+
 	if err != nil {
 		fmt.Println("写入标签时出错:", err)
 	} else {

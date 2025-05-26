@@ -1,8 +1,4 @@
-github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8 h1:OtSeLS5y0Uy01jaKK4mA/WVIYtpzVm63vLVAPzJXigg=
-github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8/go.mod h1:apkPC/CR3s48O2D7Y++n1XWEpgPNNCjXYga3PPbJe2E=
 github.com/tetratelabs/wazero v1.8.2 h1:yIgLR/b2bN31bjxwXHD8a3d+BogigR952csSDdLYEv4=
 github.com/tetratelabs/wazero v1.8.2/go.mod h1:yAI0XTsMBhREkM/YDAK/zNou3GoiAce1P6+rp/wQhjs=
-github.com/wtolson/go-taglib v0.0.0-20210406152913-79209c280058 h1:/kj9W8wSHTlwt/i4n6902i/YOPYNIXiDR/PAmgbrDyc=
-github.com/wtolson/go-taglib v0.0.0-20210406152913-79209c280058/go.mod h1:p+WHGfN/a+Ol37Pm7EIOO/6Cylieb2qn1jmKfxtSsUg=
 go.senan.xyz/taglib v0.6.1 h1:pOMqqmKUr8yKLFqEAxguxkG8bt2YcjLdZ6RQMNC4ovM=
 go.senan.xyz/taglib v0.6.1/go.mod h1:4XsEUZPk4JtQFZkakn/vGF4Zp22O4k5P3EXcAJYRSjQ=

@@ -14,9 +14,11 @@ import (
 
 // 下载歌曲请求
 type SongDownloadRequest struct {
-	Aid  int    `json:"aid"`
-	BVid string `json:"bvid"`
-	Cid  int    `json:"cid"`
+	Aid    int    `json:"aid"`
+	BVid   string `json:"bvid"`
+	Cid    int    `json:"cid"`
+	Title  string `json:"title"`
+	Artist string `json:"artist"`
 }
 
 func downloadSongWorker(ch chan SongDownloadRequest) {
@@ -28,7 +30,10 @@ func downloadSongWorker(ch chan SongDownloadRequest) {
 			continue
 		}
 		fmt.Println("download start...")
-		downloader.DownloadAudio(data.Aid, data.Cid, data.BVid)
+		if err := downloader.DownloadAudio(data.Aid, data.Cid, data.BVid, data.Title, data.Artist); err != nil {
+			fmt.Println("download failed...")
+			continue
+		}
 		fmt.Println("download done...")
 	}
 }
@@ -71,23 +76,21 @@ func main() {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "Bad Request")
+			fmt.Println("Bad Request")
 			return
 		}
-
-		fmt.Println("successfully parse request")
 
 		select {
 		case ch <- req:
 			w.WriteHeader(http.StatusOK)
-			io.WriteString(w, "order received and processing...")
+			io.WriteString(w, "successfully parse request")
+			fmt.Println("successfully parse request")
 		default:
 			w.WriteHeader(http.StatusTooManyRequests)
 			io.WriteString(w, "server is busy, please try later")
+			fmt.Println("server is busy, please try later")
 			return
 		}
-
-		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, "order received and processing...")
 
 	})
 

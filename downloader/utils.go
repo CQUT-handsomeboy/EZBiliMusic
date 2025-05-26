@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.senan.xyz/taglib"
 	"io"
 	"net/http"
 	"os"
@@ -206,7 +207,7 @@ func MatchOneOf(text string, patterns ...string) []string {
 	return nil
 }
 
-func DownloadPerChunkM4a(url string, outputPathStem string) (err error) {
+func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist string) (err error) {
 	tempFilePath := filepath.Join(TempFilesRootPath, outputPathStem+".download")
 	outputFilePath := filepath.Join(OutputFilesRootPath, outputPathStem+".m4a")
 
@@ -288,5 +289,31 @@ func DownloadPerChunkM4a(url string, outputPathStem string) (err error) {
 		io.Copy(tempFile, res.Body)
 	}
 
+	go func() {
+		err := AddMusicTag(outputFilePath, title, artist)
+		if err != nil {
+			fmt.Printf("error during adding music tag:%s\n", title)
+			return
+		}
+		fmt.Printf("successfully downloaded %s\n", title)
+	}()
+
 	return nil
+}
+
+func AddMusicTag(filePath string, title string, artist string) error {
+
+	err := taglib.WriteTags(filePath, map[string][]string{
+		taglib.Title:  {title},
+		taglib.Artist: {artist},
+	}, 1)
+
+	if err != nil {
+		fmt.Println("Error occurs when write tag")
+		return err
+	}
+
+	fmt.Printf("Succsessfully write tag:%s\n", title)
+	return nil
+
 }
