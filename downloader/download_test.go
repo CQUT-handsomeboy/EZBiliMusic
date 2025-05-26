@@ -78,7 +78,7 @@ func TestDownloadAudio(t *testing.T) {
 		}
 	}
 
-	err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem, "标题", "艺术家")
+	_, err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem)
 
 	if err != nil {
 		fmt.Println("Failed to download audio")

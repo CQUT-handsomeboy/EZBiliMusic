@@ -49,13 +49,22 @@ func DownloadAudio(aid int, cid int, bvid string, title string, artist string) e
 		}
 	}
 
-	err = DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem, title, artist)
+	pathPointer, err := DownloadPerChunkM4a(bestAudio.BaseURL, outputPathStem)
 
 	if err != nil {
-		return fmt.Errorf("failed to download audio")
+		fmt.Println("failed to download audio")
+		return err
 	}
 
 	fmt.Println("download audio successfully")
+
+	err = AddMusicTag(*pathPointer, title, artist)
+
+	if err != nil {
+		fmt.Print("failed to add music tag:")
+		fmt.Printf("%v\n", err)
+		return err
+	}
 
 	return nil
 

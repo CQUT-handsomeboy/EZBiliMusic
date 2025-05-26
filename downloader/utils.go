@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/otiai10/copy"
 	"go.senan.xyz/taglib"
 	"io"
 	"net/http"
@@ -14,8 +15,6 @@ import (
 	"regexp"
 	"strconv"
 )
-
-// const bilibiliAPI = "https://api.bilibili.com/x/player/playurl?"
 
 var fakeHeader map[string]string = map[string]string{
 	"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Safari/537.36",
@@ -207,7 +206,7 @@ func MatchOneOf(text string, patterns ...string) []string {
 	return nil
 }
 
-func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist string) (err error) {
+func DownloadPerChunkM4a(url string, outputPathStem string) (path *string, err error) {
 	tempFilePath := filepath.Join(TempFilesRootPath, outputPathStem+".download")
 	outputFilePath := filepath.Join(OutputFilesRootPath, outputPathStem+".m4a")
 
@@ -220,7 +219,7 @@ func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist
 
 		if err != nil {
 			fmt.Println("temp file not exists and create error!")
-			return
+			return nil, err
 		}
 	}
 
@@ -231,19 +230,12 @@ func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist
 		"Referer": defaultRefer,
 	}
 
-	defer func() {
-		tempFile.Close()
-		if err == nil {
-			os.Rename(tempFilePath, outputFilePath)
-		}
-	}()
-
 	var chunkSize int64 = 1024 * 1024 * 1024 // 1MB
 	var remainSize int64
 
 	if remainSizeP, err := GetResourceSize(url); err != nil {
 		fmt.Println("try to get resource size failed, try \"GET\" method instead")
-		return err
+		return nil, err
 	} else {
 		remainSize = *remainSizeP
 	}
@@ -268,7 +260,7 @@ func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist
 
 		if err != nil {
 			fmt.Println("error during init download request")
-			return err
+			return nil, err
 		}
 
 		for key, value := range headers {
@@ -281,7 +273,7 @@ func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist
 
 		if err != nil {
 			fmt.Println("error during downloading")
-			return err
+			return nil, err
 		}
 
 		defer res.Body.Close()
@@ -289,16 +281,17 @@ func DownloadPerChunkM4a(url string, outputPathStem string, title string, artist
 		io.Copy(tempFile, res.Body)
 	}
 
-	go func() {
-		err := AddMusicTag(outputFilePath, title, artist)
-		if err != nil {
-			fmt.Printf("error during adding music tag:%s\n", title)
-			return
-		}
-		fmt.Printf("successfully downloaded %s\n", title)
-	}()
+	fmt.Println("successfully downloaded")
+	fmt.Printf("file path:%s\n", outputFilePath)
 
-	return nil
+	err = copy.Copy(tempFilePath, outputFilePath)
+	if err != nil {
+		fmt.Printf("error occurs:%v\n", err)
+		return
+	}
+	os.Remove(tempFilePath)
+
+	return &outputFilePath, nil
 }
 
 func AddMusicTag(filePath string, title string, artist string) error {
@@ -309,7 +302,8 @@ func AddMusicTag(filePath string, title string, artist string) error {
 	}, 1)
 
 	if err != nil {
-		fmt.Println("Error occurs when write tag")
+		fmt.Print("Error occurs when write tag:")
+		fmt.Printf("%v\n", err)
 		return err
 	}
 
