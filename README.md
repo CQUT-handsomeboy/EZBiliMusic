@@ -31,3 +31,10 @@
     "url":"https://www.bilibili.com/video/BV1YmFPe4EnY"
 }
 ```
+
+3.  启动
+
+```shell
+docker build -t ezbili-music .
+docker run -d -p 8080:8080 -v /path/to/host/music:/usr/src/app/output ezbili-music
+```

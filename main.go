@@ -43,7 +43,7 @@ type SongMetadataRequest struct {
 }
 
 func main() {
-	ch := make(chan SongDownloadRequest)
+	ch := make(chan SongDownloadRequest, 100) // 缓存100个下载请求
 
 	exePath, _ := os.Executable()
 	downloader.OutputFilesRootPath = filepath.Join(filepath.Dir(exePath), "output")
