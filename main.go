@@ -1,16 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 
-	"github.com/CQUT-handsomeboy/EZBiliMusic/downloader"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/CQUT-handsomeboy/EZBiliMusic/downloader"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 // 下载歌曲请求
@@ -59,7 +59,7 @@ type SongMetadataRequest struct {
 }
 
 func main() {
-	ch := make(chan SongDownloadRequest,100) // 缓存100个下载请求
+	ch := make(chan SongDownloadRequest, 100) // 缓存100个下载请求
 
 	exePath, _ := os.Executable()
 	downloader.OutputFilesRootPath = filepath.Join(filepath.Dir(exePath), "output")
@@ -79,106 +79,45 @@ func main() {
 
 	go downloadSongWorker(ch)
 
-	http.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	r := gin.Default()
+	r.Use(cors.Default())
 
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			io.WriteString(w, "Method Not Allowed")
-			return
-		}
-
+	r.POST("/download", func(ctx *gin.Context) {
 		var req SongDownloadRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "Bad Request")
-			fmt.Println("Bad Request")
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "request json format is valid"})
 			return
 		}
 
 		select {
 		case ch <- req:
-			w.WriteHeader(http.StatusOK)
-			io.WriteString(w, "successfully parse request")
+			ctx.JSON(http.StatusOK, gin.H{"info": "successfully parse request"})
 			fmt.Println("successfully parse request")
 		default:
-			w.WriteHeader(http.StatusTooManyRequests)
-			io.WriteString(w, "server is busy, please try later")
+			ctx.JSON(http.StatusTooManyRequests, gin.H{"error": "server is busy, please try later"})
 			fmt.Println("server is busy, please try later")
-			return
 		}
+
 	})
 
-	http.HandleFunc("/metadata", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			io.WriteString(w, "Method Not Allowed")
-			return
-		}
-
+	r.POST("/metadata", func(ctx *gin.Context) {
 		var req SongMetadataRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "Bad Request")
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "request json format is valid"})
 			return
 		}
-
-		fmt.Println("successfully parse request")
-
 		html, err := downloader.GetHTMLContent(req.Url)
-
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "url is invalid")
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "url is invalid"})
 			return
 		}
-
 		meta, err := downloader.ParseHTMLMeta(html)
-
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, "parse HTML meta error")
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "parse HTML meta error"})
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(meta)
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, "encode JSON error")
-			return
-		}
+		ctx.JSON(http.StatusOK, gin.H{"info": "successfully get metadata", "meta": meta})
 	})
 
-	fmt.Println("Hello,server is running...")
-
-	err := http.ListenAndServe(":8080", nil)
-
-	if errors.Is(err, http.ErrServerClosed) {
-		fmt.Printf("server closed\n")
-	} else if err != nil {
-		fmt.Printf("error starting server: %s\n", err)
-		return
-	}
+	r.Run(":8080")
 }
