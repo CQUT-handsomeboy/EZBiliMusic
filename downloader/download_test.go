@@ -214,3 +214,20 @@ func TestUseGateToStorage(t *testing.T) {
 		fmt.Printf("hello:%s\n", string(out))
 	}
 }
+
+func TestReadMusicMeta(t *testing.T) {
+	filePath := "../output/BV1YmFPe4EnY_28086437741.m4a"
+
+	metadata, err := taglib.ReadTags(filePath)
+
+	if err != nil {
+		fmt.Println("read tag error:", err)
+		return
+	}
+
+	title := metadata["TITLE"][0]
+	artist := metadata["ARTIST"][0]
+
+	fmt.Println(title)
+	fmt.Println(artist)
+}
