@@ -2,9 +2,9 @@ FROM golang:1.24-alpine
 
 WORKDIR /usr/src/app
 
-RUN go install github.com/charmbracelet/skate@latest
-
 COPY go.mod go.sum ./
+
+ENV GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
 COPY . .
